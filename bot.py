@@ -15,9 +15,25 @@ logindata = {
 
 session = requests.Session()
 
+# Define human-like headers
+headers = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Connection": "keep-alive",
+    "Host": "chat.jonazwetsloot.nl",
+    "Priority": "u=0, i",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"
+}
+
 def get_php_session():
-    # Perform a GET request to /login to receive the PHPSESSID cookie
-    response = session.get(login_url)
+    # Perform a GET request to /login to receive the PHPSESSID cookie with human-like headers
+    response = session.get(login_url, headers=headers)
 
     print(f"Response Status Code (Login): {response.status_code}", flush=True)
     print(f"Response Text (Login): {response.text}", flush=True)
@@ -32,10 +48,8 @@ def get_php_session():
         return None
 
 def login(phpsessid):
-    # Add the PHPSESSID to the cookies header for actionlogin
-    headers = {
-        "Cookie": f"PHPSESSID={phpsessid}"
-    }
+    # Add the PHPSESSID to the cookies header for actionlogin and include human-like headers
+    headers["Cookie"] = f"PHPSESSID={phpsessid}"
 
     response = session.post(actionlogin_url, data=logindata, headers=headers)
     
@@ -70,11 +84,11 @@ def extract_expiry(cookie):
     return None
 
 while True:
-    # Step 1: Get PHPSESSID by visiting /login
+    # Step 1: Get PHPSESSID by visiting /login with human-like headers
     phpsessid = get_php_session()
     
     if phpsessid:
-        # Step 2: Perform login using the PHPSESSID cookie
+        # Step 2: Perform login using the PHPSESSID cookie with human-like headers
         cookie = login(phpsessid)
         if cookie:
             expiry_time = extract_expiry(cookie)
