@@ -36,7 +36,6 @@ def get_php_session():
     response = session.get(login_url, headers=headers)
 
     print(f"Response Status Code (Login): {response.status_code}", flush=True)
-    print(f"Response Text (Login): {response.text}", flush=True)
 
     # Extract PHPSESSID from cookies
     if 'PHPSESSID' in response.cookies:
@@ -54,12 +53,11 @@ def login(phpsessid):
     response = session.post(actionlogin_url, data=logindata, headers=headers)
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
-    print(f"Response Text (ActionLogin): {response.text}", flush=True)
 
     # Check for Set-Cookie header and handle the session
-    if 'Set-Cookie' in response.headers:
-        raw_cookie = response.headers['Set-Cookie']
-        print("Set-Cookie:", raw_cookie, flush=True)
+    if 'set-cookie' in response.headers:
+        raw_cookie = response.headers['set-cookie']
+        print("set-cookie:", raw_cookie, flush=True)
 
         match = re.search(r'PHPSESSID=([^;]+)', raw_cookie)
         if match:
