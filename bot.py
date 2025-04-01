@@ -56,13 +56,13 @@ def get_php_session():
         return None
 
 def login(phpsessid):
-    #headers["Cookie"] = f"PHPSESSID={phpsessid}"
+    headers["Cookie"] = f"PHPSESSID={phpsessid}"
 
-    #cookies = {
-    #    "PHPSESSID": phpsessid
-    #}
+    cookies = {
+        "PHPSESSID": phpsessid
+    }
 
-    response = session.post(actionlogin_url, data=logindata, headers=headers )#cookies=cookies)
+    response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
     print(f"Response Headers (ActionLogin): {response.headers}", flush=True)
@@ -70,6 +70,12 @@ def login(phpsessid):
     print("Response Cookies (ActionLogin):")
     for cookie_name, cookie_value in response.cookies.items():
         print(f"Cookie for /actionlogin: {cookie_name} = {cookie_value}", flush=True)
+
+    # Print all the current cookies in the session
+    print("Current Session Cookies:")
+    for cookie_name, cookie_value in session.cookies.items():
+        print(f"{cookie_name}: {cookie_value}")
+
 
     if 'PHPSESSID' in response.cookies:
         ttoken = response.cookies['PHPSESSID']
