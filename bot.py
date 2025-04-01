@@ -56,11 +56,11 @@ def get_php_session():
         return None
 
 def login(phpsessid):
-    headers["Cookie"] = f"PHPSESSID={phpsessid}"
+    #headers["Cookie"] = f"PHPSESSID={phpsessid}"
 
-    cookies = {
-        "PHPSESSID": phpsessid
-    }
+    #cookies = {
+    #    "PHPSESSID": phpsessid
+    #}
 
     response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
     
