@@ -47,14 +47,15 @@ def get_php_session():
 
     print(f"Response Status Code (Login): {response.status_code}", flush=True)
     print(f"Response Headers (Login): {response.headers}", flush=True)
+    print(f"Response Cookies (Login): {response.cookies}", flush=True)  # Print the response cookies
 
     # Extract PHPSESSID from cookies
     if 'PHPSESSID' in response.cookies:
         stored_phpsessid = response.cookies['PHPSESSID']
-        print(f"PHPSESSID from /login: {stored_phpsessid}", flush=True)
+        print(f"PHPSESSID from /login cookies: {stored_phpsessid}", flush=True)
         return stored_phpsessid
     else:
-        print("PHPSESSID not found in /login response.", flush=True)
+        print("PHPSESSID not found in /login response cookies.", flush=True)
         return None
 
 def login(phpsessid):
@@ -65,6 +66,7 @@ def login(phpsessid):
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
     print(f"Response Headers (ActionLogin): {response.headers}", flush=True)
+    print(f"Response Cookies (ActionLogin): {response.cookies}", flush=True)  # Print the response cookies
 
     # Check for Set-Cookie header and handle the session
     if 'set-cookie' in response.headers:
