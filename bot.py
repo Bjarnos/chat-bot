@@ -56,6 +56,8 @@ def get_php_session():
         return stored_phpsessid
 
     response = session.get(login_url, headers=headers)
+    for cookie in session.cookies:
+        print(f"{cookie.name} = {cookie.value}")
 
     print(f"Response Status Code (Login): {response.status_code}", flush=True)
 
