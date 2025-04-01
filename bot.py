@@ -78,5 +78,6 @@ def login(phpsessid):
     return response.status_code == 200 
 
 login(get_php_session())
-
+for cookie in session.cookies:
+    print(f"{cookie.name} = {cookie.value}")
 send_message("Hello, this is a test message!")
