@@ -15,7 +15,7 @@ logindata = {
 
 session = requests.Session()
 
-headers = { # Fake human headers
+headers = { 
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, br, zstd",
     "Accept-Language": "en-US,en;q=0.5",
@@ -58,10 +58,14 @@ def login(phpsessid):
     response = session.post(actionlogin_url, data=logindata, headers=headers)
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
-    print(f"Response Cookies (ActionLogin): {response.cookies}", flush=True)
+    print(f"Response Headers (ActionLogin): {response.headers}", flush=True)
+    
+    print("Response Cookies (ActionLogin):")
+    for cookie_name, cookie_value in response.cookies.items():
+        print(f"Cookie for /actionlogin: {cookie_name} = {cookie_value}", flush=True)
 
     if 'PHPSESSID' in response.cookies:
-        ttoken = response.cookies['PHPSESSID']["value"]
+        ttoken = response.cookies['PHPSESSID']
         print(f"PHPSESSID from /actionlogin cookies: {ttoken}", flush=True)
         return ttoken
     else:
