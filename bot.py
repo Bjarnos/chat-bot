@@ -5,7 +5,8 @@ import re
 
 dotenv.load_dotenv()
 
-login_url = "https://chat.jonazwetsloot.nl/actionlogin"
+login_url = "https://chat.jonazwetsloot.nl/login"
+actionlogin_url = "https://chat.jonazwetsloot.nl/actionlogin"
 logindata = {
     "user": os.environ.get('user'),
     "pass": os.environ.get('pass'),
@@ -14,12 +15,34 @@ logindata = {
 
 session = requests.Session()
 
-def login():
-    response = session.post(login_url, data=logindata)
-    
-    print(f"Response Status Code: {response.status_code}", flush=True)
-    print(f"Response Text: {response.text}", flush=True)
+def get_php_session():
+    # Perform a GET request to /login to receive the PHPSESSID cookie
+    response = session.get(login_url)
 
+    print(f"Response Status Code (Login): {response.status_code}", flush=True)
+    print(f"Response Text (Login): {response.text}", flush=True)
+
+    # Extract PHPSESSID from cookies
+    if 'PHPSESSID' in response.cookies:
+        phpsessid = response.cookies['PHPSESSID']
+        print(f"PHPSESSID from /login: {phpsessid}", flush=True)
+        return phpsessid
+    else:
+        print("PHPSESSID not found in /login response.", flush=True)
+        return None
+
+def login(phpsessid):
+    # Add the PHPSESSID to the cookies header for actionlogin
+    headers = {
+        "Cookie": f"PHPSESSID={phpsessid}"
+    }
+
+    response = session.post(actionlogin_url, data=logindata, headers=headers)
+    
+    print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
+    print(f"Response Text (ActionLogin): {response.text}", flush=True)
+
+    # Check for Set-Cookie header and handle the session
     if 'Set-Cookie' in response.headers:
         raw_cookie = response.headers['Set-Cookie']
         print("Set-Cookie:", raw_cookie, flush=True)
@@ -47,17 +70,25 @@ def extract_expiry(cookie):
     return None
 
 while True:
-    cookie = login()
-    if cookie:
-        expiry_time = extract_expiry(cookie)
-        if expiry_time:
-            wait_time = expiry_time - time.time()
-            print(f"Cookie expires in {int(wait_time)} seconds. Sleeping...", flush=True)
-            if wait_time > 0:
-                time.sleep(wait_time)
+    # Step 1: Get PHPSESSID by visiting /login
+    phpsessid = get_php_session()
+    
+    if phpsessid:
+        # Step 2: Perform login using the PHPSESSID cookie
+        cookie = login(phpsessid)
+        if cookie:
+            expiry_time = extract_expiry(cookie)
+            if expiry_time:
+                wait_time = expiry_time - time.time()
+                print(f"Cookie expires in {int(wait_time)} seconds. Sleeping...", flush=True)
+                if wait_time > 0:
+                    time.sleep(wait_time)
+            else:
+                print("Session cookie detected, re-authenticating in 1 hour.", flush=True)
+                time.sleep(3600)
         else:
-            print("Session cookie detected, re-authenticating in 1 hour.", flush=True)
-            time.sleep(3600)
+            print("Failed to retrieve cookie. Retrying in 60 seconds.", flush=True)
+            time.sleep(60)
     else:
-        print("Failed to retrieve cookie. Retrying in 60 seconds.", flush=True)
+        print("Failed to retrieve PHPSESSID. Retrying in 60 seconds.", flush=True)
         time.sleep(60)
