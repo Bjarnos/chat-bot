@@ -18,19 +18,18 @@ logindata = {
 session = requests.Session()
 
 headers = { 
-    "Accept": "application/json, text/plain, */*",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json,text/plain,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, br, zstd",
     "Accept-Language": "en-US,en;q=0.5",
     "Connection": "keep-alive",
     "Host": "chat.jonazwetsloot.nl",
     "Origin": "https://chat.jonazwetsloot.nl",
-    "Referer": "https://chat.jonazwetsloot.nl/login",
+#   "Referer": "https://chat.jonazwetsloot.nl/login",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
     "Content-Type": "application/x-www-form-urlencoded",
 }
 
 stored_phpsessid = None
-token = None
 
 # API
 def send_message(message):
