@@ -31,17 +31,28 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"
 }
 
+# Store PHPSESSID for reuse
+stored_phpsessid = None
+
 def get_php_session():
+    global stored_phpsessid
+
+    # If we already have a PHPSESSID, reuse it
+    if stored_phpsessid:
+        print("Reusing stored PHPSESSID:", stored_phpsessid, flush=True)
+        return stored_phpsessid
+
     # Perform a GET request to /login to receive the PHPSESSID cookie with human-like headers
     response = session.get(login_url, headers=headers)
 
     print(f"Response Status Code (Login): {response.status_code}", flush=True)
+    print(f"Response Headers (Login): {response.headers}", flush=True)
 
     # Extract PHPSESSID from cookies
     if 'PHPSESSID' in response.cookies:
-        phpsessid = response.cookies['PHPSESSID']
-        print(f"PHPSESSID from /login: {phpsessid}", flush=True)
-        return phpsessid
+        stored_phpsessid = response.cookies['PHPSESSID']
+        print(f"PHPSESSID from /login: {stored_phpsessid}", flush=True)
+        return stored_phpsessid
     else:
         print("PHPSESSID not found in /login response.", flush=True)
         return None
@@ -53,11 +64,12 @@ def login(phpsessid):
     response = session.post(actionlogin_url, data=logindata, headers=headers)
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
+    print(f"Response Headers (ActionLogin): {response.headers}", flush=True)
 
     # Check for Set-Cookie header and handle the session
     if 'set-cookie' in response.headers:
         raw_cookie = response.headers['set-cookie']
-        print("set-cookie:", raw_cookie, flush=True)
+        print("Set-Cookie:", raw_cookie, flush=True)
 
         match = re.search(r'PHPSESSID=([^;]+)', raw_cookie)
         if match:
