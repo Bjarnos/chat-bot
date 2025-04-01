@@ -55,7 +55,11 @@ def get_php_session():
 def login(phpsessid):
     headers["Cookie"] = f"PHPSESSID={phpsessid}"
 
-    response = session.post(actionlogin_url, data=logindata, headers=headers)
+    cookies = {
+        "PHPSESSID": phpsessid
+    }
+
+    response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
     print(f"Response Headers (ActionLogin): {response.headers}", flush=True)
