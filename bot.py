@@ -16,6 +16,10 @@ session = requests.Session()
 
 def login():
     response = session.post(login_url, data=logindata)
+    
+    print(f"Response Status Code: {response.status_code}", flush=True)
+    print(f"Response Text: {response.text}", flush=True)
+
     if 'Set-Cookie' in response.headers:
         raw_cookie = response.headers['Set-Cookie']
         print("Set-Cookie:", raw_cookie, flush=True)
