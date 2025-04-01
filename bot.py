@@ -27,7 +27,10 @@ headers = {
     "Sec-Fetch-Site": "same-origin",
     "Sec-Fetch-User": "?1",
     "Upgrade-Insecure-Requests": "1",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Origin": "https://chat.jonazwetsloot.nl",
+    "Referer": "https://chat.jonazwetsloot.nl/login"
 }
 
 stored_phpsessid = None
