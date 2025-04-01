@@ -62,7 +62,7 @@ def login(phpsessid):
     #    "PHPSESSID": phpsessid
     #}
 
-    response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
+    response = session.post(actionlogin_url, data=logindata, headers=headers )#cookies=cookies)
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
     print(f"Response Headers (ActionLogin): {response.headers}", flush=True)
