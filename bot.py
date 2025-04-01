@@ -40,7 +40,7 @@ def send_message(message):
         "key": "abc"
     }
 
-    response = session.post(send_message_url, json=data, headers=headers)
+    response = session.post(send_message_url, data=data, headers=headers)
     
     print(f"Response Status Code (Send Message): {response.status_code}", flush=True)
     print(f"Response JSON (Send Message): {response.json()}", flush=True)
