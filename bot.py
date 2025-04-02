@@ -40,6 +40,7 @@ def convert_to_seconds(time_text):
     if match:
         num = int(match.group(1))
         unit = match.group(2)
+        print(num * number_map[unit])
         return num * number_map[unit]
 
     print("doing a 0")
@@ -54,7 +55,7 @@ def extract_messages(html):
         if time_element and content_element:
             time_text = time_element.text.strip()
             content_text = content_element.text.strip()
-            time_in_seconds = convert_to_seconds(time_text)
+            time_in_seconds = time.time() - convert_to_seconds(time_text)
             messages.append((time_in_seconds, content_text))
     return messages
 
@@ -89,8 +90,8 @@ class FunctionBinder:
                         if self.last_checked_time is None:
                             self.last_checked_time = messages[0][0]
                         else:
-                            for time_text, content in reversed(messages):
-                                if time_text > self.last_checked_time:
+                            for time_code, content in reversed(messages):
+                                if time_code > self.last_checked_time:
                                     self._run_bound_functions(content)
                             self.last_checked_time = messages[0][0]
             except Exception as e:
