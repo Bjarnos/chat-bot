@@ -35,6 +35,7 @@ headers = {
 message_cache = {}
 
 # API
+user = None
 def create_post(message=False):
     """ Sends a message """
     if not message:
@@ -55,6 +56,8 @@ def create_post(message=False):
     print(f"Response Status Code (Send Message): {response.status_code}")
 
 def like(message_id=False, value=True):
+    print(message_id)
+    print(value)
     """ Likes a message """
     if not message_id:
         return
@@ -64,9 +67,12 @@ def like(message_id=False, value=True):
         print("Failed to retrieve key.")
         return
 
+    print(user)
+    print(key)
+    
     data = {
         "id": message_id,
-        "like": value,
+        "like": str(value),
         "name": user,
         "key": key
     }
@@ -79,7 +85,7 @@ class Message:
         self.time = time
         self.text = text
         self.sender = sender
-        self.id = id
+        self.id = str(id)
 
     def __repr__(self):
         if len(self.text) > 30:
@@ -123,7 +129,6 @@ def extract_messages(html):
         
         message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
         message_id = message_id_element['data-id'] if message_id_element and 'data-id' in message_id_element.attrs else None
-        print(message_id)
         if time_element and content_element:
             time_text = time_element.text.strip()
             content_text = content_element.text.strip()
@@ -192,8 +197,9 @@ def get_php_session():
     response = session.get(login_url, headers=headers)
     print(f"Login Page Response: {response.status_code}")
 
-user = None
 def login(username, password):
+    global user
+    
     """ Perform the actual login request """
     logindata = {
         "user": username,
