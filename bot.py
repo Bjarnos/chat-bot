@@ -27,7 +27,7 @@ headers = {
     "Accept-Language": "en-US,en;q=0.5",
     "Connection": "keep-alive",
     "Host": "chat.jonazwetsloot.nl",
-    "Origin": None,
+    "Origin": "chat.jonazwetsloot.nl",
     "Priority": "u=0, i",
     "Sec-Fetch-Dest": "document",
     "Sec-Fetch-Mode": "navigate",
