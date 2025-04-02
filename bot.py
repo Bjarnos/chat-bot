@@ -190,6 +190,7 @@ def login(username, password):
     return response.status_code == 200
 
 def get_key():
+    global saved_key
     if saved_key:
         return saved_key
     
