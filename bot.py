@@ -33,6 +33,7 @@ headers = {
 
 # Variables
 message_cache = {}
+saved_key = None
 
 # Public API
 user = None
@@ -112,7 +113,7 @@ class Message:
     def get_time(self):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.time))
 
-class FunctionBinder:
+class BinderService:
     def __init__(self):
         self.functions = []
         self.reply_functions = {}
@@ -189,14 +190,18 @@ def login(username, password):
     return response.status_code == 200
 
 def get_key():
+    if saved_key:
+        return saved_key
+    
     response = session.get(timeline_url, headers=headers)
     match = re.search(r'<input[^>]+name="key"[^>]+value="([^\"]+)"', response.text)
-    return match.group(1) if match else None
+    saved_key = match.group(1) if match else None
+    return saved_key
 
 # Example code
 get_php_session()
 if login(os.environ.get('user'), os.environ.get('pass')):
-    binder = FunctionBinder()
+    binder = BinderService()
     def replyhello(message):
         message.reply("Hello! #2")
     def dolike(message):
