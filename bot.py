@@ -26,6 +26,9 @@ headers = {
     "Content-Type": "application/x-www-form-urlencoded",
 }
 
+# Cache dictionary to store the first 10 characters of each message and timestamp
+message_cache = {}
+
 # Absolute Core
 def convert_to_seconds(time_text):
     number_map = {
@@ -89,9 +92,16 @@ class FunctionBinder:
                             self.last_checked_time = messages[0][0]
                         else:
                             for time_code, content in reversed(messages):
-                                if time_code > self.last_checked_time and time.time() - time_code < 600:
-                                    # New messages can be max 10 minutes old
+                                # Cache cleanup: Remove expired messages
+                                self._remove_expired_messages()
+
+                                # Check if the message content's first 10 characters are already cached
+                                cache_key = content[:10]
+                                if cache_key not in message_cache:
+                                    # Process the message and cache it
                                     self._run_bound_functions(content)
+                                    message_cache[cache_key] = time_code  # Cache the message with timestamp
+
                             self.last_checked_time = messages[0][0]
             except Exception as e:
                 print(f"Error checking for new posts: {e}")
@@ -99,6 +109,13 @@ class FunctionBinder:
 
     def stop_checking(self):
         self.is_checking = False
+
+    def _remove_expired_messages(self):
+        """ Remove messages from cache older than 10 minutes (600 seconds). """
+        current_time = time.time()
+        keys_to_remove = [key for key, timestamp in message_cache.items() if current_time - timestamp > 600]
+        for key in keys_to_remove:
+            del message_cache[key]
 
 # Core functions
 def get_php_session():
