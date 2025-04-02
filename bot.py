@@ -84,10 +84,7 @@ def get_php_session():
 def login(phpsessid):
     headers["Cookie"] = f"PHPSESSID={phpsessid}; cookies=true"
     cookies["PHPSESSID"] = phpsessid
-    print("top")
-    for cookie in cookies:
-        print(f"{cookie.name} = {cookie.value}")
-    print("bottom")
+    print(cookies)
     
     response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
     
