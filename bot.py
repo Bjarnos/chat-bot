@@ -72,7 +72,7 @@ def like(message_id=False, value=True):
     
     data = {
         "id": message_id,
-        "like": str(value),
+        "like": str(value).lower(),
         "name": user,
         "key": key
     }
