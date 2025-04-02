@@ -34,7 +34,7 @@ headers = {
 # Variables
 message_cache = {}
 
-# API
+# Public API
 user = None
 
 def create_post(message=False):
@@ -43,17 +43,10 @@ def create_post(message=False):
     
     key = get_key()
     if not key:
-        print("Failed to retrieve key.")
         return
 
-    data = {
-        "message": message,
-        "attachments": "",
-        "name": user,
-        "key": key
-    }
-    response = session.post(send_message_url, data=data, headers=headers)
-    print(f"Response Status Code (Send Message): {response.status_code}")
+    data = {"message": message, "attachments": "", "name": user, "key": key}
+    session.post(send_message_url, data=data, headers=headers)
 
 def reply(message_id=False, message=False):
     if not message_id or not message:
@@ -61,17 +54,10 @@ def reply(message_id=False, message=False):
     
     key = get_key()
     if not key:
-        print("Failed to retrieve key.")
         return
 
-    data = {
-        "message": message,
-        "id": message_id,
-        "name": user,
-        "key": key
-    }
-    response = session.post(send_message_url, data=data, headers=headers)
-    print(f"Response Status Code (Send Message): {response.status_code}")
+    data = {"message": message, "id": message_id, "name": user, "key": key}
+    session.post(send_message_url, data=data, headers=headers)
 
 def like(message_id=False, value=True):
     if not message_id:
@@ -79,25 +65,19 @@ def like(message_id=False, value=True):
     
     key = get_key()
     if not key:
-        print("Failed to retrieve key.")
         return
     
-    data = {
-        "id": message_id,
-        "like": str(value).lower(),
-        "name": user,
-        "key": key
-    }
-    response = session.post(like_url, data=data, headers=headers)
-    print(f"Response Status Code (Like Message): {response.status_code}")
+    data = {"id": message_id, "like": str(value).lower(), "name": user, "key": key}
+    session.post(like_url, data=data, headers=headers)
 
-# Core module
+# Core modules
 class Message:
     def __init__(self, time, text, sender, id):
         self.time = time
         self.text = text
         self.sender = sender
         self.id = str(id)
+        self.reactions = []
 
     def like(self, value=True):
         like(self.id, value)
@@ -105,7 +85,7 @@ class Message:
     def reply(self, message=False):
         reply(self.id, message)
 
-    def bind_to_reply(self, func=False):
+    def bind_to_reply(self, func):
         binder.bind_to_message_reply(self.id, func)
     
     def get_time(self):
@@ -148,26 +128,24 @@ class FunctionBinder:
                             message_cache[message.id] = message.time
                             self._run_bound_functions(message)
             except Exception as e:
-                print(f"Error checking for new posts: {e}")
+                pass
             time.sleep(10)
 
     def stop_checking(self):
         self.is_checking = False
 
-# Core initialize
 def extract_messages(html):
     soup = BeautifulSoup(html, 'html.parser')
     messages = []
     for message_div in soup.find_all('div', class_='message'):
-        time_element = message_div.find('p', class_='time')
         content_element = message_div.find('div', class_='content')
         user_element = message_div.find('a', class_='username')
         message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
         message_id = message_id_element['data-id'] if message_id_element else None
-        if time_element and content_element and user_element:
-            messages.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
+        messages.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
     return messages
 
+# Core API
 def get_php_session():
     session.get(login_url, headers=headers)
 
@@ -180,18 +158,20 @@ def login(username, password):
 
 def get_key():
     response = session.get(timeline_url, headers=headers)
-    match = re.search(r'<input[^>]+name="key"[^>]+value="([^\"]+)"', response.text)
+    match = re.search(r'<input[^>]+name="key"[^>]+value="([^"]+)"', response.text)
     return match.group(1) if match else None
 
 # Example code
 get_php_session()
 if login(os.environ.get('user'), os.environ.get('pass')):
     binder = FunctionBinder()
+    
     def replyhello(message):
-        message.reply("Hello!")
+        message.reply("Hello! #2")
+    
     def dolike(message):
         message.like()
         message.bind_to_reply(replyhello)
+    
     binder.bind_to_message_post(dolike)
     binder.start_checking()
-    #create_post("||Empty||")
