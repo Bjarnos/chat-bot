@@ -16,6 +16,9 @@ logindata = {
     "redirect": ""
 }
 
+print(os.environ.get('user'))
+print(os.environ.get('pass'))
+
 session = requests.Session()
 
 headers = { 
@@ -24,7 +27,13 @@ headers = {
     "Accept-Language": "en-US,en;q=0.5",
     "Connection": "keep-alive",
     "Host": "chat.jonazwetsloot.nl",
-    "Origin": "https://chat.jonazwetsloot.nl",
+    "Origin": None,
+    "Priority": "u=0, i",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "same-origin",
+    "Sec-Fetch-User": "?1",
+    "Upgrade-Insecure-Requests": 1
 #   "Referer": "https://chat.jonazwetsloot.nl/login",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
     "Content-Type": "application/x-www-form-urlencoded",
@@ -83,7 +92,7 @@ def login(phpsessid):
 
 def get_key():
     response = session.get(timeline_url, headers=headers)
-    print(response.text)
+    #print(response.text)
     #match = re.search(r'name="key"\s+value="([^"]+)"', response.text)
     match = re.search(r'<input[^>]+name="key"[^>]+value="([^"]+)"', response.text)
     if match:
