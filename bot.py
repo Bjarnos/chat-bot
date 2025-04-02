@@ -33,7 +33,7 @@ headers = {
     "Sec-Fetch-Mode": "navigate",
     "Sec-Fetch-Site": "same-origin",
     "Sec-Fetch-User": "?1",
-    "Upgrade-Insecure-Requests": True,
+    "Upgrade-Insecure-Requests": "1",
 #   "Referer": "https://chat.jonazwetsloot.nl/login",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
     "Content-Type": "application/x-www-form-urlencoded",
