@@ -147,6 +147,7 @@ class BinderService:
                 response = requests.get(timeline_url, headers=headers)
                 if response.status_code == 200:
                     messages = extract_messages(response.text)
+                    print(messages[:100])
                     def handle_message_list(messages, first):
                         for message in messages:
                             if time.time() - message.time < 600 and message.id not in message_cache:
@@ -185,18 +186,37 @@ def format_time(timestr):
 def extract_messages(html):
     def parse_message(message_container):
         message_div = message_container.find('div', class_='message')
-        time_element = message_div.find('p', class_='time')
-        content_element = message_div.find('div', class_='content')
-        user_element = message_div.find('a', class_='username')
-        message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
-        message_id = message_id_element['data-id'] if message_id_element else None
-    
-        reactions = [parse_message(reaction_div) for reaction_div in message_container.find('div', class_='reactions').find_all('div', class_='reaction')]
+        if not message_div:
+            print("no message")
+            return None
 
-        return Message(time_element.text.strip() if content_element else "", content_element.text.strip() if content_element else "", user_element.text.strip() if user_element else "Unknown", message_id if message_id else "0", reactions if reactions else [])
-        
+        bar_div = message_div.find('div', class_='bar')
+        if not bar_div:
+            print("no bar")
+            return None
+
+        time_element = bar_div.find('p', class_='time')
+        content_element = message_div.find('div', class_='content')
+        user_element = bar_div.find('a', class_='username')
+        message_id_element = bar_div.find('button', class_='submit inverted message-menu-share-button')
+
+        message_id = message_id_element['data-id'] if message_id_element else None
+
+        time_text = time_element.text.strip() if time_element else ""
+        content_text = content_element.find('p').text.strip() if content_element and content_element.find('p') else ""
+        user_text = user_element.text.strip() if user_element else "Unknown"
+
+        reactions_container = message_container.find('div', class_='reactions')
+        reactions = []
+        if reactions_container:
+            reactions = [parse_message(reaction_div) for reaction_div in reactions_container.find_all('div', class_='reaction')]
+
+        return Message(time_text, content_text, user_text, message_id if message_id else "0", reactions if reactions else [])
+
     soup = BeautifulSoup(html, 'html.parser')
-    return [parse_message(message_container) for message_container in soup.find_all('div', class_='message-container')]
+    messages = [parse_message(message_container) for message_container in soup.find_all('div', class_='message-container')]
+
+    return [msg for msg in messages if msg is not None]
 
 # Core API
 def get_php_session():
