@@ -148,7 +148,7 @@ class FunctionBinder:
                     messages = extract_messages(response.text)
                     for message in messages:
                         if time.time() - message.time < 600 and message.id not in message_cache:
-                            print("message: " + message.text)
+                            print(time.time() - message.time)
                             message_cache[message.id] = message.time
                             self._run_bound_functions(message)
                         for reaction in message.reactions:
