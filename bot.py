@@ -55,6 +55,28 @@ def create_post(message=False):
     response = session.post(send_message_url, data=data, headers=headers)
     print(f"Response Status Code (Send Message): {response.status_code}")
 
+def reply(message_id=False, message=False):
+    """ Sends a message """
+    if not message_id:
+        return
+    
+    if not message:
+        return
+    
+    key = get_key()
+    if not key:
+        print("Failed to retrieve key.")
+        return
+
+    data = {
+        "message": message,
+        "id": message_id,
+        "name": user,
+        "key": key
+    }
+    response = session.post(send_message_url, data=data, headers=headers)
+    print(f"Response Status Code (Send Message): {response.status_code}")
+
 def like(message_id=False, value=True):
     print(message_id)
     print(value)
@@ -95,6 +117,9 @@ class Message:
 
     def like(self, value=True):
         like(self.id, value)
+
+    def reply(self, message=False):
+        reply(self.id, message)
     
     # Return time as formatted string?
     def get_time(self):
@@ -230,7 +255,7 @@ if login(os.environ.get('user'), os.environ.get('pass')):
 
     def dolike(message):
         print("Found a message!")
-        message.like()
+        message.reply(f"||Dit is een automatisch gegenereerd commentaar|| \nOriginele tekst: {message.text}")
     binder.bind(dolike)
 
     binder.start_checking()
