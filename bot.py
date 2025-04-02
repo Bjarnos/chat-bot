@@ -82,7 +82,7 @@ def login(phpsessid):
     headers["Cookie"] = f"PHPSESSID={phpsessid}"
 
     cookies = {
-        "cookies": True,
+        "cookies": "True",
         "PHPSESSID": phpsessid
     }
 
