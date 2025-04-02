@@ -28,6 +28,20 @@ headers = {
 
 message_cache = {}
 
+# Custom Message class
+class Message:
+    def __init__(self, time, text, sender):
+        self.time = time
+        self.text = text
+        self.sender = sender
+
+    def __repr__(self):
+        return f"Message(from {self.sender}): {self.text[:30]}..."
+
+    # Optionally, you can create a method to retrieve the time as a formatted string.
+    def get_time(self):
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.time))
+
 # Absolute Core
 def convert_to_seconds(time_text):
     number_map = {
@@ -59,11 +73,8 @@ def extract_messages(html):
             content_text = content_element.text.strip()
             user_text = user_element.text.strip()
             time_in_seconds = time.time() - convert_to_seconds(time_text)
-            messages.append({
-                "time": time_in_seconds,
-                "text": content_text,
-                "sender": user_text
-            })
+            message = Message(time_in_seconds, content_text, user_text)
+            messages.append(message)
     return messages
 
 class FunctionBinder:
@@ -94,17 +105,17 @@ class FunctionBinder:
                     messages = extract_messages(response.text)
                     if messages:
                         if self.last_checked_time is None:
-                            self.last_checked_time = messages[0]["time"]
+                            self.last_checked_time = messages[0].time
                         else:
                             for message in reversed(messages):
                                 self._remove_expired_messages()
                                 
-                                cache_key = message["text"][:10]
+                                cache_key = message.text[:10]
                                 if cache_key not in message_cache:
                                     self._run_bound_functions(message)
-                                    message_cache[cache_key] = message["time"]
+                                    message_cache[cache_key] = message.time
 
-                            self.last_checked_time = messages[0]["time"]
+                            self.last_checked_time = messages[0].time
             except Exception as e:
                 print(f"Error checking for new posts: {e}")
             time.sleep(10)
@@ -171,8 +182,8 @@ if login(os.environ.get('user'), os.environ.get('pass')):
 
     def ping(message):
         print("Found a message!")
-        print("Content text: " + message['text'])
-        print("Sender: " + message['sender'])
+        print("Content text: " + message.text)
+        print("Sender: " + message.sender)
     binder.bind(ping)
 
     binder.start_checking()
