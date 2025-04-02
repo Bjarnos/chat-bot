@@ -179,7 +179,7 @@ def extract_messages(html):
             user_element = reaction_div.find('a', class_='username')
             message_id_element = reaction_div.find('button', class_='submit inverted message-menu-share-button')
             message_id = message_id_element['data-id'] if message_id_element else None
-            messages.reactions.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
+            message.reactions.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
         
     return messages
 
