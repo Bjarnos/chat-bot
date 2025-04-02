@@ -1,20 +1,15 @@
 import requests
 import dotenv, os
-import time
 import re
 
 dotenv.load_dotenv()
+
+session = requests.Session()
 
 login_url = "https://chat.jonazwetsloot.nl/login"
 actionlogin_url = "https://chat.jonazwetsloot.nl/actionlogin"
 timeline_url = "https://chat.jonazwetsloot.nl/timeline"
 send_message_url = "https://chat.jonazwetsloot.nl/api/v1/message"
-
-logindata = {
-    "user": os.environ.get('user'),
-    "pass": os.environ.get('pass'),
-    "redirect": ""
-}
 
 headers = { 
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json,text/plain,*/*;q=0.8",
@@ -22,101 +17,60 @@ headers = {
     "Accept-Language": "en-US,en;q=0.5",
     "Connection": "keep-alive",
     "Host": "chat.jonazwetsloot.nl",
-    "Origin": "chat.jonazwetsloot.nl",
-    "Priority": "u=0, i",
-    "Pragma": "no-cache",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "same-origin",
-    "Sec-Fetch-User": "?1",
-    "Upgrade-Insecure-Requests": "1",
-#   "Referer": "https://chat.jonazwetsloot.nl/login",
+    "Origin": "https://chat.jonazwetsloot.nl",
+    "Referer": "https://chat.jonazwetsloot.nl/login",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
     "Content-Type": "application/x-www-form-urlencoded",
 }
 
-cookies = {
-    "cookies": "true"
-}
+def get_php_session():
+    """ Get initial PHPSESSID from the login page """
+    response = session.get(login_url, headers=headers)
+    print(f"Login Page Response: {response.status_code}")
 
-session = requests.Session()
-session.cookies.set("cookies", "true", domain="chat.jonazwetsloot.nl")
+    for cookie in session.cookies:
+        print(f"Session Cookie: {cookie.name} = {cookie.value}")
 
-stored_phpsessid = None
-key = None
+def login():
+    """ Perform the actual login request """
+    logindata = {
+        "user": os.environ.get('user'),
+        "pass": os.environ.get('pass'),
+        "redirect": ""  # The form has this, so we keep it
+    }
 
-# API
+    response = session.post(actionlogin_url, data=logindata, headers=headers)
+    print(f"Response Status Code (ActionLogin): {response.status_code}")
+    print(response.text[:500])
+
+    return response.status_code == 200
+
+def get_key():
+    """ Extracts the key needed for sending messages """
+    response = session.get(timeline_url, headers=headers)
+    match = re.search(r'<input[^>]+name="key"[^>]+value="([^"]+)"', response.text)
+    if match:
+        return match.group(1)
+    return None
+
 def send_message(message):
+    """ Sends a message using the chat API """
+    key = get_key()
+    if not key:
+        print("Failed to retrieve key.")
+        return
+
     data = {
         "message": message,
         "attachments": "",
         "name": os.environ.get('user'),
         "key": key
     }
-
     response = session.post(send_message_url, data=data, headers=headers)
-    
-    print(f"Response Status Code (Send Message): {response.status_code}", flush=True)
-    print(f"Response JSON (Send Message): {response.json()}", flush=True)
+    print(f"Response Status Code (Send Message): {response.status_code}")
+    print(f"Response JSON (Send Message): {response.json()}")
 
-# Log in
-def get_php_session():
-    global stored_phpsessid
-
-    if stored_phpsessid:
-        print("Reusing stored PHPSESSID:", stored_phpsessid, flush=True)
-        return stored_phpsessid
-
-    response = session.get(login_url, headers=headers)
-    for cookie in session.cookies:
-        print(f"{cookie.name} = {cookie.value}")
-
-    print(f"Response Status Code (Login): {response.status_code}", flush=True)
-
-    if 'PHPSESSID' in response.cookies:
-        stored_phpsessid = response.cookies['PHPSESSID']
-        print(f"PHPSESSID from /login cookies: {stored_phpsessid}", flush=True)
-        return stored_phpsessid
-    else:
-        print("PHPSESSID not found in /login response cookies.", flush=True)
-        return None
-
-def login_get(phpsessid):
-    headers["Cookie"] = f"PHPSESSID={phpsessid}; cookies=true"
-    
-    response = session.get(actionlogin_url, headers=headers, cookies={"PHPSESSID": phpsessid, "cookies": "true"})
-    
-    print(f"Response Status Code (ActionLogin GET): {response.status_code}", flush=True)
-    print(f"Response Content (ActionLogin GET): {response.text[:500]}", flush=True)
-    return response.status_code == 200
-
-def login(phpsessid):
-    headers["Cookie"] = f"PHPSESSID={phpsessid}; cookies=true"
-    cookies["PHPSESSID"] = phpsessid
-    print(cookies)
-    
-    response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
-    
-    print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
-    return response.status_code == 200
-
-def get_key():
-    print("---")
-    for cookie in session.cookies:
-        print(f"{cookie.name} = {cookie.value}")
-    response = session.get(timeline_url, headers=headers)
-    print(response.text)
-    #match = re.search(r'name="key"\s+value="([^"]+)"', response.text)
-    match = re.search(r'<input[^>]+name="key"[^>]+value="([^"]+)"', response.text)
-    if match:
-        key = match.group(1)
-        print(f"Extracted key: {key}")
-    else:
-        print("Key not found in the HTML.")
-
-login_get(get_php_session())
-login(get_php_session())
-for cookie in session.cookies:
-    print(f"{cookie.name} = {cookie.value}")
-get_key()
-send_message("This message was automatically generated by a selfbot.")
+# Run the login sequence
+get_php_session()  # Initialize session with GET request
+if login():  # Perform login
+    send_message("This message was automatically generated by a selfbot.")
