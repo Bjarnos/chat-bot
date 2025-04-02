@@ -90,6 +90,9 @@ def login(phpsessid):
     return response.status_code == 200
 
 def get_key():
+    print("---")
+    for cookie in session.cookies:
+        print(f"{cookie.name} = {cookie.value}")
     response = session.get(timeline_url, headers=headers)
     print(response.text)
     #match = re.search(r'name="key"\s+value="([^"]+)"', response.text)
