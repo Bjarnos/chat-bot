@@ -250,7 +250,7 @@ if login(os.environ.get('user'), os.environ.get('pass')):
 
     def dolike(message):
         print("Found a message!")
-        message.reply(f"||Dit is een automatisch gegenereerd commentaar|| \nOriginele tekst: {message.text}")
+        message.like()
     binder.bind(dolike)
 
     binder.start_checking()
