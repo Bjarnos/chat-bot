@@ -185,7 +185,9 @@ def format_time(timestr):
 
 def extract_messages(html):
     def parse_message(message_container):
-        message_div = message_container.find('div', class_='message')
+        print(message_container.prettify())
+        #message_div = message_container.find('div', class_='message')
+        message_div = message_container.select_one('div.message')
         if not message_div:
             print("no message")
             return None
