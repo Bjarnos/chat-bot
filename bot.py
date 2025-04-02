@@ -36,8 +36,8 @@ message_cache = {}
 
 # API
 user = None
+
 def create_post(message=False):
-    """ Sends a message """
     if not message:
         return
     
@@ -56,11 +56,7 @@ def create_post(message=False):
     print(f"Response Status Code (Send Message): {response.status_code}")
 
 def reply(message_id=False, message=False):
-    """ Sends a message """
-    if not message_id:
-        return
-    
-    if not message:
+    if not message_id or not message:
         return
     
     key = get_key()
@@ -78,7 +74,6 @@ def reply(message_id=False, message=False):
     print(f"Response Status Code (Send Message): {response.status_code}")
 
 def like(message_id=False, value=True):
-    """ Likes a message """
     if not message_id:
         return
     
@@ -96,7 +91,7 @@ def like(message_id=False, value=True):
     response = session.post(like_url, data=data, headers=headers)
     print(f"Response Status Code (Like Message): {response.status_code}")
 
-# Custom Message class
+# Core module
 class Message:
     def __init__(self, time, text, sender, id):
         self.time = time
@@ -104,72 +99,38 @@ class Message:
         self.sender = sender
         self.id = str(id)
 
-    def __repr__(self):
-        if len(self.text) > 30:
-            return f"Message(from {self.sender}): {self.text[:30]}..."
-        else:
-            return f"Message(from {self.sender}): {self.text}"
-
     def like(self, value=True):
         like(self.id, value)
 
     def reply(self, message=False):
         reply(self.id, message)
+
+    def bind_to_reply(self, func=False):
+        binder.bind_to_message_reply(self.id, func)
     
-    # Return time as formatted string?
     def get_time(self):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.time))
-
-# Absolute Core
-def convert_to_seconds(time_text):
-    number_map = {
-        'second': 1,
-        'minute': 60,
-        'hour': 3600,
-        'day': 86400,
-        'month': 2592000,
-        'year': 31536000,
-    }
-    
-    match = re.match(r'(\d+)\s*(second|minute|hour|day|month|year)', time_text)
-    if match:
-        num = int(match.group(1))
-        unit = match.group(2)
-        return num * number_map[unit]
-
-    return 0
-
-def extract_messages(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    messages = []
-    for message_div in soup.find_all('div', class_='message'):
-        time_element = message_div.find('p', class_='time')
-        content_element = message_div.find('div', class_='content')
-        user_element = message_div.find('a', class_='username')
-        
-        message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
-        message_id = message_id_element['data-id'] if message_id_element and 'data-id' in message_id_element.attrs else None
-        if time_element and content_element:
-            time_text = time_element.text.strip()
-            content_text = content_element.text.strip()
-            user_text = user_element.text.strip()
-            time_in_seconds = time.time() - convert_to_seconds(time_text)
-            message = Message(time_in_seconds, content_text, user_text, message_id)
-            messages.append(message)
-    return messages
 
 class FunctionBinder:
     def __init__(self):
         self.functions = []
+        self.reply_functions = {}
         self.is_checking = False
-        self.last_checked_time = time.time()
 
-    def bind(self, func):
+    def bind_to_message_post(self, func):
         self.functions.append(func)
+
+    def bind_to_message_reply(self, message_id, func):
+        if message_id not in self.reply_functions:
+            self.reply_functions[message_id] = []
+        self.reply_functions[message_id].append(func)
 
     def _run_bound_functions(self, message):
         for func in self.functions:
             func(message)
+        if message.id in self.reply_functions:
+            for func in self.reply_functions[message.id]:
+                func(message)
 
     def start_checking(self):
         if not self.is_checking:
@@ -178,25 +139,14 @@ class FunctionBinder:
 
     def _check_periodically(self):
         while self.is_checking:
-            print("Checking...")
-
             try:
                 response = requests.get(timeline_url, headers=headers)
                 if response.status_code == 200:
                     messages = extract_messages(response.text)
-                    if messages:
-                        if self.last_checked_time is None:
-                            self.last_checked_time = messages[0].time
-                        else:
-                            self._remove_expired_messages()
-                            for message in reversed(messages):
-                                if time.time() - message.time < 600:
-                                    cache_key = f"{message.sender}_{message.text[:10]}"
-                                    if cache_key not in message_cache:
-                                        message_cache[cache_key] = message.time
-                                        self._run_bound_functions(message)
-
-                            self.last_checked_time = messages[0].time
+                    for message in messages:
+                        if message.id not in message_cache:
+                            message_cache[message.id] = message.time
+                            self._run_bound_functions(message)
             except Exception as e:
                 print(f"Error checking for new posts: {e}")
             time.sleep(10)
@@ -204,55 +154,44 @@ class FunctionBinder:
     def stop_checking(self):
         self.is_checking = False
 
-    def _remove_expired_messages(self):
-        """ Remove messages from cache older than 10 minutes (600 seconds). """
-        current_time = time.time()
-        keys_to_remove = [key for key, timestamp in message_cache.items() if current_time - timestamp > 600]
-        for key in keys_to_remove:
-            del message_cache[key]
+# Core initialize
+def extract_messages(html):
+    soup = BeautifulSoup(html, 'html.parser')
+    messages = []
+    for message_div in soup.find_all('div', class_='message'):
+        time_element = message_div.find('p', class_='time')
+        content_element = message_div.find('div', class_='content')
+        user_element = message_div.find('a', class_='username')
+        message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
+        message_id = message_id_element['data-id'] if message_id_element else None
+        if time_element and content_element and user_element:
+            messages.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
+    return messages
 
-# Core functions
 def get_php_session():
-    """ Get initial PHPSESSID from the login page """
-    response = session.get(login_url, headers=headers)
-    print(f"Login Page Response: {response.status_code}")
+    session.get(login_url, headers=headers)
 
 def login(username, password):
     global user
-    
-    """ Perform the actual login request """
-    logindata = {
-        "user": username,
-        "pass": password,
-        "redirect": ""
-    }
-
     user = username
-
+    logindata = {"user": username, "pass": password, "redirect": ""}
     response = session.post(actionlogin_url, data=logindata, headers=headers)
-    print(f"Response Status Code (ActionLogin): {response.status_code}")
-
     return response.status_code == 200
 
 def get_key():
-    """ Extracts the key needed for Authorization """
     response = session.get(timeline_url, headers=headers)
-    match = re.search(r'<input[^>]+name="key"[^>]+value="([^"]+)"', response.text)
-    if match:
-        return match.group(1)
-    return None
+    match = re.search(r'<input[^>]+name="key"[^>]+value="([^\"]+)"', response.text)
+    return match.group(1) if match else None
 
-# Example Core
+# Example code
 get_php_session()
 if login(os.environ.get('user'), os.environ.get('pass')):
-    # Example client
     binder = FunctionBinder()
-
+    def replyhello(message):
+        message.reply("Hello!")
     def dolike(message):
-        print("Found a message!")
         message.like()
-    binder.bind(dolike)
-
+        message.bind_to_reply(replyhello)
+    binder.bind_to_message_post(dolike)
     binder.start_checking()
-    
-    create_post("||This message was automatically generated by a selfbot.||")
+    #create_post("||Empty||")
