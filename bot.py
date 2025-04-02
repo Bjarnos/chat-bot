@@ -16,11 +16,6 @@ logindata = {
     "redirect": ""
 }
 
-print(os.environ.get('user'))
-print(os.environ.get('pass'))
-
-session = requests.Session()
-
 headers = { 
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8,application/json,text/plain,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, br, zstd",
@@ -38,6 +33,13 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
     "Content-Type": "application/x-www-form-urlencoded",
 }
+
+cookies = {
+    "cookies": "true"
+}
+
+session = requests.Session()
+session.cookies.set("cookes", "true", domain="chat.jonazwetsloot.nl")
 
 stored_phpsessid = None
 key = None
@@ -80,11 +82,7 @@ def get_php_session():
 
 def login(phpsessid):
     headers["Cookie"] = f"PHPSESSID={phpsessid}"
-
-    cookies = {
-        "cookies": "true",
-        "PHPSESSID": phpsessid
-    }
+    cookies["PHPSESSID"] = phpsessid
 
     response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
     
