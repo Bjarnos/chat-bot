@@ -95,7 +95,7 @@ def like(message_id=False, value=True):
 # Core modules
 class Message:
     def __init__(self, time, text, sender, id, reactions):
-        self.time = time
+        self.time = format_time(time)
         self.text = text
         self.sender = sender
         self.id = str(id)
@@ -147,21 +147,40 @@ class BinderService:
                 response = requests.get(timeline_url, headers=headers)
                 if response.status_code == 200:
                     messages = extract_messages(response.text)
-                    for message in messages:
-                        if time.time() - message.time < 600 and message.id not in message_cache:
-                            print(time.time() - message.time)
-                            message_cache[message.id] = message.time
-                            self._run_bound_functions(message)
-                        for reaction in message.reactions:
-                            print("reaction: " + reaction.text)
-                            message_cache[message.id] = message.time
-                            self._run_bound_functions_to_reply(message)
+                    def handle_message_list(messages, first):
+                        for message in messages:
+                            if time.time() - message.time < 600 and message.id not in message_cache:
+                                print(time.time() - message.time)
+                                message_cache[message.id] = message.time
+                                if first:
+                                    self._run_bound_functions(message)
+                                else:
+                                    self._run_bound_functions_to_reply(message)
+                                handle_message_list(message.reactions, False)
+                    
+                    handle_message_list(messages, True)
             except Exception as e:
                 print(f"Error checking for new posts: {e}")
             time.sleep(10)
 
     def stop_checking(self):
         self.is_checking = False
+
+def format_time(timestr):
+    match = re.match(r"(\d+)\s*(second|minute)s?", timestr.strip().lower())
+    
+    if not match:
+        return "Invalid time format"
+    
+    number = int(match.group(1))
+    unit = match.group(2)
+    
+    if unit == "second":
+        return time.time() - number
+    elif unit == "minute":
+        return time.time() - number * 60
+    else:
+        return 0
 
 def extract_messages(html):
     def parse_message(message_div):
@@ -171,9 +190,9 @@ def extract_messages(html):
         message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
         message_id = message_id_element['data-id'] if message_id_element else None
     
-        reactions = [parse_message(reaction_div) for reaction_div in message_div.find_all('div', class_='reaction')]
+        reactions = [parse_message(reaction_div) for reaction_div in message_div.find('div', class_='reactions').find_all('div', class_='reaction')]
 
-        return Message(time.time(), content_element.text.strip() if content_element else "", user_element.text.strip() if user_element else "Unknown", message_id if message_id else "0", reactions if reactions else [])
+        return Message(time_element.text.strip() if content_element else "", content_element.text.strip() if content_element else "", user_element.text.strip() if user_element else "Unknown", message_id if message_id else "0", reactions if reactions else [])
         
     soup = BeautifulSoup(html, 'html.parser')
     return [parse_message(message_div) for message_div in soup.find_all('div', class_='message')]
