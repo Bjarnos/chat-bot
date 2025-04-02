@@ -24,6 +24,7 @@ headers = {
     "Host": "chat.jonazwetsloot.nl",
     "Origin": "chat.jonazwetsloot.nl",
     "Priority": "u=0, i",
+    "Pragma": "no-cache",
     "Sec-Fetch-Dest": "document",
     "Sec-Fetch-Mode": "navigate",
     "Sec-Fetch-Site": "same-origin",
@@ -81,9 +82,13 @@ def get_php_session():
         return None
 
 def login(phpsessid):
-    headers["Cookie"] = f"PHPSESSID={phpsessid}"
+    headers["Cookie"] = f"PHPSESSID={phpsessid}; cookies=true"
     cookies["PHPSESSID"] = phpsessid
-
+    print("top")
+    for cookie in cookies:
+        print(f"{cookie.name} = {cookie.value}")
+    print("bottom")
+    
     response = session.post(actionlogin_url, data=logindata, headers=headers, cookies=cookies)
     
     print(f"Response Status Code (ActionLogin): {response.status_code}", flush=True)
