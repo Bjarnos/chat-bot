@@ -93,12 +93,12 @@ def like(message_id=False, value=True):
 
 # Core modules
 class Message:
-    def __init__(self, time, text, sender, id):
+    def __init__(self, time, text, sender, id, reactions):
         self.time = time
         self.text = text
         self.sender = sender
         self.id = str(id)
-        self.reactions = []
+        self.reactions = reactions
 
     def like(self, value=True):
         like(self.id, value)
@@ -171,15 +171,17 @@ def extract_messages(html):
         user_element = message_div.find('a', class_='username')
         message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
         message_id = message_id_element['data-id'] if message_id_element else None
-        messages.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
-        
+
+        reactions = []
         for reaction_div in soup.find_all('div', class_='reaction'):
             time_element = reaction_div.find('p', class_='time')
             content_element = reaction_div.find('div', class_='content')
             user_element = reaction_div.find('a', class_='username')
             message_id_element = reaction_div.find('button', class_='submit inverted message-menu-share-button')
             message_id = message_id_element['data-id'] if message_id_element else None
-            message.reactions.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
+            reactions.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
+
+        messages.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id, reactions))
         
     return messages
 
