@@ -39,7 +39,7 @@ cookies = {
 }
 
 session = requests.Session()
-session.cookies.set("cookes", "true", domain="chat.jonazwetsloot.nl")
+session.cookies.set("cookies", "true", domain="chat.jonazwetsloot.nl")
 
 stored_phpsessid = None
 key = None
