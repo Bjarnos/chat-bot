@@ -110,10 +110,9 @@ class FunctionBinder:
                         if self.last_checked_time is None:
                             self.last_checked_time = messages[0].time
                         else:
+                            self._remove_expired_messages()
                             for message in reversed(messages):
-                                self._remove_expired_messages()
-                                
-                                cache_key = f"{message.sender}_{message.time}"
+                                cache_key = f"{message.sender}_{message.text[:10]}"
                                 if cache_key not in message_cache:
                                     message_cache[cache_key] = message.time
                                     self._run_bound_functions(message)
