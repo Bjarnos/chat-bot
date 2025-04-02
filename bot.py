@@ -183,19 +183,20 @@ def format_time(timestr):
         return 0
 
 def extract_messages(html):
-    def parse_message(message_div):
+    def parse_message(message_container):
+        message_div = message_container.find('div', class_='message')
         time_element = message_div.find('p', class_='time')
         content_element = message_div.find('div', class_='content')
         user_element = message_div.find('a', class_='username')
         message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
         message_id = message_id_element['data-id'] if message_id_element else None
     
-        reactions = [parse_message(reaction_div) for reaction_div in message_div.find('div', class_='reactions').find_all('div', class_='reaction')]
+        reactions = [parse_message(reaction_div) for reaction_div in message_container.find('div', class_='reactions').find_all('div', class_='reaction')]
 
         return Message(time_element.text.strip() if content_element else "", content_element.text.strip() if content_element else "", user_element.text.strip() if user_element else "Unknown", message_id if message_id else "0", reactions if reactions else [])
         
     soup = BeautifulSoup(html, 'html.parser')
-    return [parse_message(message_div) for message_div in soup.find_all('div', class_='message')]
+    return [parse_message(message_div) for message_container in soup.find_all('div', class_='message-container')]
 
 # Core API
 def get_php_session():
