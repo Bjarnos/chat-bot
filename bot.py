@@ -106,6 +106,7 @@ class FunctionBinder:
                 response = requests.get(timeline_url, headers=headers)
                 if response.status_code == 200:
                     messages = extract_messages(response.text)
+                    print(messages)
                     if messages:
                         if self.last_checked_time is None:
                             self.last_checked_time = messages[0].time
