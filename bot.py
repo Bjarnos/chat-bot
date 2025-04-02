@@ -93,7 +93,7 @@ def login(phpsessid):
 
 def get_key():
     response = session.get(timeline_url, headers=headers)
-    #print(response.text)
+    print(response.text)
     #match = re.search(r'name="key"\s+value="([^"]+)"', response.text)
     match = re.search(r'<input[^>]+name="key"[^>]+value="([^"]+)"', response.text)
     if match:
