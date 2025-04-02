@@ -78,8 +78,6 @@ def reply(message_id=False, message=False):
     print(f"Response Status Code (Send Message): {response.status_code}")
 
 def like(message_id=False, value=True):
-    print(message_id)
-    print(value)
     """ Likes a message """
     if not message_id:
         return
@@ -88,9 +86,6 @@ def like(message_id=False, value=True):
     if not key:
         print("Failed to retrieve key.")
         return
-
-    print(user)
-    print(key)
     
     data = {
         "id": message_id,
