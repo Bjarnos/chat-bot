@@ -51,7 +51,7 @@ def create_post(message):
     response = session.post(send_message_url, data=data, headers=headers)
     print(f"Response Status Code (Send Message): {response.status_code}")
 
-def like(message_id, value):
+def like(message_id, value=True):
     """ Likes a message """
     key = get_key()
     if not key:
@@ -60,7 +60,7 @@ def like(message_id, value):
 
     data = {
         "id": message_id,
-        "like": True if value is None else value,
+        "like": value,
         "name": user,
         "key": key
     }
