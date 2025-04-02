@@ -43,10 +43,17 @@ def create_post(message=False):
     
     key = get_key()
     if not key:
+        print("Failed to retrieve key.")
         return
 
-    data = {"message": message, "attachments": "", "name": user, "key": key}
-    session.post(send_message_url, data=data, headers=headers)
+    data = {
+        "message": message,
+        "attachments": "",
+        "name": user,
+        "key": key
+    }
+    response = session.post(send_message_url, data=data, headers=headers)
+    print(f"Response Status Code (Send Message): {response.status_code}")
 
 def reply(message_id=False, message=False):
     if not message_id or not message:
@@ -54,10 +61,17 @@ def reply(message_id=False, message=False):
     
     key = get_key()
     if not key:
+        print("Failed to retrieve key.")
         return
 
-    data = {"message": message, "id": message_id, "name": user, "key": key}
-    session.post(send_message_url, data=data, headers=headers)
+    data = {
+        "message": message,
+        "id": message_id,
+        "name": user,
+        "key": key
+    }
+    response = session.post(send_message_url, data=data, headers=headers)
+    print(f"Response Status Code (Send Message): {response.status_code}")
 
 def like(message_id=False, value=True):
     if not message_id:
@@ -65,10 +79,17 @@ def like(message_id=False, value=True):
     
     key = get_key()
     if not key:
+        print("Failed to retrieve key.")
         return
     
-    data = {"id": message_id, "like": str(value).lower(), "name": user, "key": key}
-    session.post(like_url, data=data, headers=headers)
+    data = {
+        "id": message_id,
+        "like": str(value).lower(),
+        "name": user,
+        "key": key
+    }
+    response = session.post(like_url, data=data, headers=headers)
+    print(f"Response Status Code (Like Message): {response.status_code}")
 
 # Core modules
 class Message:
@@ -85,7 +106,7 @@ class Message:
     def reply(self, message=False):
         reply(self.id, message)
 
-    def bind_to_reply(self, func):
+    def bind_to_reply(self, func=False):
         binder.bind_to_message_reply(self.id, func)
     
     def get_time(self):
@@ -108,6 +129,8 @@ class FunctionBinder:
     def _run_bound_functions(self, message):
         for func in self.functions:
             func(message)
+
+    def _run_bound_functions_to_reply(self, message):
         if message.id in self.reply_functions:
             for func in self.reply_functions[message.id]:
                 func(message)
@@ -124,11 +147,16 @@ class FunctionBinder:
                 if response.status_code == 200:
                     messages = extract_messages(response.text)
                     for message in messages:
-                        if message.id not in message_cache:
+                        if time.time() - message.time < 600 and message.id not in message_cache:
+                            print("message: " + message.text)
                             message_cache[message.id] = message.time
                             self._run_bound_functions(message)
+                        for reaction in message.reactions:
+                            print("reaction: " + reaction.text)
+                            message_cache[message.id] = message.time
+                            self._run_bound_functions_to_reply(message)
             except Exception as e:
-                pass
+                print(f"Error checking for new posts: {e}")
             time.sleep(10)
 
     def stop_checking(self):
@@ -138,11 +166,21 @@ def extract_messages(html):
     soup = BeautifulSoup(html, 'html.parser')
     messages = []
     for message_div in soup.find_all('div', class_='message'):
+        time_element = message_div.find('p', class_='time')
         content_element = message_div.find('div', class_='content')
         user_element = message_div.find('a', class_='username')
         message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
         message_id = message_id_element['data-id'] if message_id_element else None
         messages.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
+        
+        for reaction_div in soup.find_all('div', class_='reaction'):
+            time_element = reaction_div.find('p', class_='time')
+            content_element = reaction_div.find('div', class_='content')
+            user_element = reaction_div.find('a', class_='username')
+            message_id_element = reaction_div.find('button', class_='submit inverted message-menu-share-button')
+            message_id = message_id_element['data-id'] if message_id_element else None
+            messages.reactions.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
+        
     return messages
 
 # Core API
@@ -158,20 +196,18 @@ def login(username, password):
 
 def get_key():
     response = session.get(timeline_url, headers=headers)
-    match = re.search(r'<input[^>]+name="key"[^>]+value="([^"]+)"', response.text)
+    match = re.search(r'<input[^>]+name="key"[^>]+value="([^\"]+)"', response.text)
     return match.group(1) if match else None
 
 # Example code
 get_php_session()
 if login(os.environ.get('user'), os.environ.get('pass')):
     binder = FunctionBinder()
-    
     def replyhello(message):
         message.reply("Hello! #2")
-    
     def dolike(message):
         message.like()
         message.bind_to_reply(replyhello)
-    
     binder.bind_to_message_post(dolike)
     binder.start_checking()
+    #create_post("||This message was generated with SelfbotV1||")
