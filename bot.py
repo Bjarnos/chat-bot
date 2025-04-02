@@ -196,7 +196,7 @@ def extract_messages(html):
         return Message(time_element.text.strip() if content_element else "", content_element.text.strip() if content_element else "", user_element.text.strip() if user_element else "Unknown", message_id if message_id else "0", reactions if reactions else [])
         
     soup = BeautifulSoup(html, 'html.parser')
-    return [parse_message(message_div) for message_container in soup.find_all('div', class_='message-container')]
+    return [parse_message(message_container) for message_container in soup.find_all('div', class_='message-container')]
 
 # Core API
 def get_php_session():
