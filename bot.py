@@ -94,17 +94,17 @@ class FunctionBinder:
                     messages = extract_messages(response.text)
                     if messages:
                         if self.last_checked_time is None:
-                            self.last_checked_time = messages[0].time
+                            self.last_checked_time = messages[0]["time"]
                         else:
                             for message in reversed(messages):
                                 self._remove_expired_messages()
                                 
-                                cache_key = message.text[:10]
+                                cache_key = message["text"][:10]
                                 if cache_key not in message_cache:
                                     self._run_bound_functions(message)
-                                    message_cache[cache_key] = message.time
+                                    message_cache[cache_key] = message["time"]
 
-                            self.last_checked_time = messages[0].time
+                            self.last_checked_time = messages[0]["time"]
             except Exception as e:
                 print(f"Error checking for new posts: {e}")
             time.sleep(10)
@@ -171,8 +171,8 @@ if login(os.environ.get('user'), os.environ.get('pass')):
 
     def ping(message):
         print("Found a message!")
-        print("Content text: " + message.text)
-        print("Sender: " + message.sender)
+        print("Content text: " + message['text'])
+        print("Sender: " + message['sender'])
     binder.bind(ping)
 
     binder.start_checking()
