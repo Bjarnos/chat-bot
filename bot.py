@@ -35,8 +35,11 @@ headers = {
 message_cache = {}
 
 # API
-def create_post(message):
+def create_post(message=False):
     """ Sends a message """
+    if not message:
+        return
+    
     key = get_key()
     if not key:
         print("Failed to retrieve key.")
@@ -51,8 +54,11 @@ def create_post(message):
     response = session.post(send_message_url, data=data, headers=headers)
     print(f"Response Status Code (Send Message): {response.status_code}")
 
-def like(message_id, value=True):
+def like(message_id=False, value=True):
     """ Likes a message """
+    if not message_id:
+        return
+    
     key = get_key()
     if not key:
         print("Failed to retrieve key.")
@@ -81,7 +87,7 @@ class Message:
         else:
             return f"Message(from {self.sender}): {self.text}"
 
-    def like(self, value):
+    def like(self, value=True):
         like(self.id, value)
     
     # Return time as formatted string?
