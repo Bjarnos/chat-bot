@@ -36,9 +36,12 @@ class Message:
         self.sender = sender
 
     def __repr__(self):
-        return f"Message(from {self.sender}): {self.text[:30]}..."
+        if len(self.text) > 30:
+            return f"Message(from {self.sender}): {self.text[:30]}..."
+        else:
+            return f"Message(from {self.sender}): {self.text}"
 
-    # Optionally, you can create a method to retrieve the time as a formatted string.
+    # Return time as formatted string?
     def get_time(self):
         return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(self.time))
 
@@ -110,12 +113,13 @@ class FunctionBinder:
                             for message in reversed(messages):
                                 self._remove_expired_messages()
                                 
-                                cache_key = message.text[:10]
+                                cache_key = message.sender + message.text[:10]
                                 if cache_key not in message_cache:
-                                    self._run_bound_functions(message)
                                     message_cache[cache_key] = message.time
+                                    self._run_bound_functions(message)
 
                             self.last_checked_time = messages[0].time
+                            print(message_cache)
             except Exception as e:
                 print(f"Error checking for new posts: {e}")
             time.sleep(10)
@@ -136,6 +140,7 @@ def get_php_session():
     response = session.get(login_url, headers=headers)
     print(f"Login Page Response: {response.status_code}")
 
+user = None
 def login(username, password):
     """ Perform the actual login request """
     logindata = {
@@ -143,6 +148,8 @@ def login(username, password):
         "pass": password,
         "redirect": ""
     }
+
+    user = username
 
     response = session.post(actionlogin_url, data=logindata, headers=headers)
     print(f"Response Status Code (ActionLogin): {response.status_code}")
@@ -168,7 +175,7 @@ def send_message(message):
     data = {
         "message": message,
         "attachments": "",
-        "name": os.environ.get('user'),
+        "name": user,
         "key": key
     }
     response = session.post(send_message_url, data=data, headers=headers)
@@ -181,9 +188,9 @@ if login(os.environ.get('user'), os.environ.get('pass')):
     binder = FunctionBinder()
 
     def ping(message):
-        print("Found a message!")
+        #print("Found a message!")
         print("Content text: " + message.text)
-        print("Sender: " + message.sender)
+        #print("Sender: " + message.sender)
     binder.bind(ping)
 
     binder.start_checking()
