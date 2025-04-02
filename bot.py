@@ -81,6 +81,15 @@ def get_php_session():
         print("PHPSESSID not found in /login response cookies.", flush=True)
         return None
 
+def login_get(phpsessid):
+    headers["Cookie"] = f"PHPSESSID={phpsessid}; cookies=true"
+    
+    response = session.get(actionlogin_url, headers=headers, cookies={"PHPSESSID": phpsessid, "cookies": "true"})
+    
+    print(f"Response Status Code (ActionLogin GET): {response.status_code}", flush=True)
+    print(f"Response Content (ActionLogin GET): {response.text[:500]}", flush=True)
+    return response.status_code == 200
+
 def login(phpsessid):
     headers["Cookie"] = f"PHPSESSID={phpsessid}; cookies=true"
     cookies["PHPSESSID"] = phpsessid
@@ -105,6 +114,7 @@ def get_key():
     else:
         print("Key not found in the HTML.")
 
+login_get(get_php_session())
 login(get_php_session())
 for cookie in session.cookies:
     print(f"{cookie.name} = {cookie.value}")
