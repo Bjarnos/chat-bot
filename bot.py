@@ -163,27 +163,19 @@ class FunctionBinder:
         self.is_checking = False
 
 def extract_messages(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    messages = []
-    for message_div in soup.find_all('div', class_='message'):
+    def parse_message(message_div):
         time_element = message_div.find('p', class_='time')
         content_element = message_div.find('div', class_='content')
         user_element = message_div.find('a', class_='username')
         message_id_element = message_div.find('button', class_='submit inverted message-menu-share-button')
         message_id = message_id_element['data-id'] if message_id_element else None
-
-        reactions = []
-        for reaction_div in soup.find_all('div', class_='reaction'):
-            time_element = reaction_div.find('p', class_='time')
-            content_element = reaction_div.find('div', class_='content')
-            user_element = reaction_div.find('a', class_='username')
-            message_id_element = reaction_div.find('button', class_='submit inverted message-menu-share-button')
-            message_id = message_id_element['data-id'] if message_id_element else None
-            reactions.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id))
-
-        messages.append(Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id, reactions))
         
-    return messages
+        reactions = [parse_message(reaction_div) for reaction_div in message_div.find_all('div', class_='reaction')]
+        
+        return Message(time.time(), content_element.text.strip(), user_element.text.strip(), message_id, reactions)
+    
+    soup = BeautifulSoup(html, 'html.parser')
+    return [parse_message(message_div) for message_div in soup.find_all('div', class_='message')]
 
 # Core API
 def get_php_session():
