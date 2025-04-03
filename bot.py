@@ -249,9 +249,7 @@ class PublicMessage:
         reply(self.id, message)
 
     def bind_to_reply(self, func=None):
-        print("binding")
         Core_BotService.ConnectionService.bind_to_message_reply(self.id, func)
-        print(Core_BotService.ConnectionService.reply_functions)
 
 class DMMessage:
     def __init__(self, time, text, sender, id, groupname, groupid):
@@ -291,14 +289,10 @@ class ConnectionService:
 
     def _run_bound_functions_to_reply(self, message, parent_id):
         if message is not None and parent_id is not None:
-            print("??")
             if first_run and message.sender == user:
-                print("returning!")
                 return
 
-            print(self.reply_functions)
             if self.reply_functions.get(parent_id):
-                print("yes")
                 for func in self.reply_functions[parent_id]:
                     func(message)
 
@@ -323,9 +317,6 @@ class ConnectionService:
                                     if first:
                                         self._run_bound_functions(message)
                                     else:
-                                        print("any reply found")
-                                        print(message.id)
-                                        print(message.parent_id)
                                         self._run_bound_functions_to_reply(message, message.parent_id)
                                 handle_message_list(message.reactions, False)
                             else:
@@ -446,11 +437,9 @@ class ConnectionService:
         self.public_functions.append(func)
 
     def bind_to_message_reply(self, message_id, func):
-        print("abc")
         if message_id not in self.reply_functions:
             self.reply_functions[message_id] = []
         self.reply_functions[message_id].append(func)
-        print(self.reply_functions)
 
     # DM Service:
     def bind_to_any_dm(self, func):
