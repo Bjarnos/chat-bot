@@ -6,6 +6,9 @@ import threading
 from bs4 import BeautifulSoup
 from datetime import datetime
 
+#import sys
+#import pyperclip
+
 # Preloads
 session = requests.Session()
 
@@ -42,7 +45,7 @@ message_cache = {}
 dm_cache = {}
 dm_cache_user = {}
 saved_key = None
-first_run = True
+first_run = False
 show_http = True
 
 # Functions
@@ -249,6 +252,7 @@ class PublicMessage:
         reply(self.id, message)
 
     def bind_to_reply(self, func=None):
+        print("binding")
         Core_BotService.ConnectionService.bind_to_message_reply(self.id, func)
 
 class DMMessage:
@@ -289,10 +293,12 @@ class ConnectionService:
 
     def _run_bound_functions_to_reply(self, message, parent_id):
         if message is not None and parent_id is not None:
+            print("??")
             if first_run and message.sender == user:
                 return
 
             if self.reply_functions.get(parent_id):
+                print("yes")
                 for func in self.reply_functions[parent_id]:
                     func(message)
 
@@ -313,10 +319,12 @@ class ConnectionService:
                         for message in messages:
                             if message != None:
                                 if time.time() - message.time < 600 and message.id not in message_cache:
+                                    print(message.text)
                                     message_cache[message.id] = message.time
                                     if first:
                                         self._run_bound_functions(message)
                                     else:
+                                        print("A reaction?")
                                         self._run_bound_functions_to_reply(message, message.parent_id)
                                 handle_message_list(message.reactions, False)
                             else:
@@ -437,9 +445,11 @@ class ConnectionService:
         self.public_functions.append(func)
 
     def bind_to_message_reply(self, message_id, func):
+        print("abc")
         if message_id not in self.reply_functions:
             self.reply_functions[message_id] = []
         self.reply_functions[message_id].append(func)
+        print(self.reply_functions)
 
     # DM Service:
     def bind_to_any_dm(self, func):
@@ -542,12 +552,18 @@ if bot.login("Bjarnos", "RobloxUserBjarnos24"):
     connections = Core_BotService.ConnectionService
     messages = Core_BotService.MessageService
     def f2(message):
+        time.sleep(.1)
         message.like()
+        time.sleep(.1)
         message.reply("Hier heb je een like!")
+        time.sleep(.1)
         messages.direct_message(message.sender, "Hallo! Leuk dat je op het bericht hebt gereageerd. Laat hier commentaar op de bot achter zodat ik hem kan verbeteren :).")
     def f1(message):
-        if message.text == "Hallo! Ik ben een selfbot. Reageer op dit bericht voor een gratis like :D\n||This message was generated with SelfbotV1||":
+        print(message.text)
+        if message.text == "Hallo! Ik ben een selfbot. Reageer op dit bericht voor een gratis like :D This message was generated with SelfbotV1":
+            print('yup')
             message.bind_to_reply(f2)
     connections.bind_to_public_post(f1)
     connections.start_checking_public()
+    time.sleep(.1)
     messages.create_post("Hallo! Ik ben een selfbot. Reageer op dit bericht voor een gratis like :D\n||This message was generated with SelfbotV1||")
