@@ -13,3 +13,5 @@ if bot.login(username, password):
         if message.sender == "Bjarnos":
             message.reply("Hi Bjarnos!\n-# This message was created with a selfbot.")
     connections.bind_to_public_post(f1)
+else:
+    print("Login failed!")
