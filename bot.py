@@ -7,4 +7,4 @@ username = os.environ.get('user')
 password = os.environ.get('pass')
 if bot.login(username, password):
     messages = bot.MessageService
-    messages.create_post("Hello! I am a selfbot :D")
+    messages.create_post("YT vid incoming!")
