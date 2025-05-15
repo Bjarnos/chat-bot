@@ -6,6 +6,7 @@ dotenv.load_dotenv()
 username = os.environ.get('user')
 password = os.environ.get('pass')
 if bot.login(username, password):
+    print("Login succesful!")
     connections = bot.ConnectionService
     def f1(message):
         print("message?")
