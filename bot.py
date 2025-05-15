@@ -6,5 +6,8 @@ dotenv.load_dotenv()
 username = os.environ.get('user')
 password = os.environ.get('pass')
 if bot.login(username, password):
-    messages = bot.MessageService
-    messages.create_post("YT vid incoming!")
+    connections = bot.ConnectionService
+    def f1(message):
+        if message.sender == "Bjarnos":
+            message.reply("Hi Bjarnos!\n-# This message was created with a selfbot.")
+    connections.bind_to_public_post(f1)
